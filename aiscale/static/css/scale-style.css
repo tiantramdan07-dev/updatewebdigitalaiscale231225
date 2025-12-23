@@ -1,0 +1,151 @@
+/* ... (Salin kode CSS lengkap dari respons sebelumnya yang paling sederhana) ... */
+/* Saya akan berikan versi yang lebih baru dan sesuai dengan HTML di atas */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;7d00&display=swap');
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+}
+.container {
+    display: flex;
+    width: 1200px;
+    height: 700px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.main-panel {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e0e0e0;
+}
+.side-panel {
+    flex: 1;
+    padding: 20px;
+    background-color: #fafafa;
+    overflow-y: auto;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #fff;
+}
+header h1 {
+    font-size: 24px;
+    margin: 0;
+    color: #0056b3;
+}
+#clock {
+    font-size: 16px;
+    font-weight: 500;
+}
+.content {
+    display: flex;
+    flex: 1;
+    padding: 20px;
+    gap: 20px;
+}
+.camera-feed {
+    flex: 1.5;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.info-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.display-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.display-item {
+    background: #f0f2f5;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+.display-item label {
+    display: block;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+.display-item span {
+    font-size: 28px;
+    font-weight: 700;
+}
+.display-item span.error { color: #d9534f; }
+.display-item.total {
+    grid-column: 1 / -1;
+    background-color: #0056b3;
+    color: #fff;
+    border-color: #004494;
+}
+.display-item.total label { color: #e0e0e0; }
+.display-item.total span { font-size: 40px; }
+.action-btn {
+    width: 100%;
+    padding: 18px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    background-color: #28a745;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: auto;
+    transition: background-color 0.2s;
+}
+.action-btn:hover:not(:disabled) { background-color: #218838; }
+.action-btn:disabled { background-color: #aaa; cursor: not-allowed; }
+.side-panel h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+.product-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+.product-item.active {
+    background-color: #d4edda;
+    border-color: #28a745;
+}
+.product-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    margin-right: 15px;
+}
+.product-details .name { font-weight: 700; }
+.product-details .price { color: #555; }
+.notification {
+    text-align: center;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 5px;
+    font-weight: 500;
+    transition: opacity 0.5s;
+}
+.notification.hidden { display: none; }
+.notification.success { background-color: #d4edda; color: #155724; }
+.notification.error { background-color: #f8d7da; color: #721c24; }

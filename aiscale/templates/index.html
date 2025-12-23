@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timbangan AIoT</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/scale-style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="main-panel">
+            <header>
+                <h1>TIMBANGAN DIGITAL AIoT</h1>
+                <div id="clock"></div>
+            </header>
+            <div class="content">
+                <div class="camera-feed">
+                    <img src="{{ url_for('video_feed') }}" width="100%" height="100%">
+                </div>
+                <div class="info-panel">
+                    <div class="display-grid">
+                        <div class="display-item">
+                            <label>BERAT (kg)</label>
+                            <span id="weight-value">-</span>
+                        </div>
+                        <div class="display-item">
+                            <label>OBJEK TERDETEKSI</label>
+                            <span id="detection-value">-</span>
+                        </div>
+                        <div class="display-item">
+                            <label>HARGA / KG (Rp)</label>
+                            <span id="price-value">-</span>
+                        </div>
+                        <div class="display-item total">
+                            <label>TOTAL HARGA (Rp)</label>
+                            <span id="total-price-value">-</span>
+                        </div>
+                    </div>
+                    <button id="btn-cetak" class="action-btn" disabled>SIMPAN & CETAK</button>
+                    <div id="notification" class="hidden"></div>
+                </div>
+            </div>
+        </div>
+        <div class="side-panel">
+            <h2>Daftar Produk</h2>
+            <div id="product-list">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let products = [];
+            let currentProduct = null;
+            let currentWeight = 0;
+
+            const weightEl = document.getElementById('weight-value');
+            const detectionEl = document.getElementById('detection-value');
+            const priceEl = document.getElementById('price-value');
+            const totalPriceEl = document.getElementById('total-price-value');
+            const productListEl = document.getElementById('product-list');
+            const cetakBtn = document.getElementById('btn-cetak');
+            const notifEl = document.getElementById('notification');
+
+            // 1. Muat daftar produk dari server
+            async function loadProducts() {
+                try {
+                    const response = await fetch('/api/produk');
+                    products = await response.json();
+                    renderProducts();
+                } catch (error) {
+                    console.error('Gagal memuat produk:', error);
+                }
+            }
+
+            function renderProducts() {
+                productListEl.innerHTML = '';
+                products.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'product-item';
+                    item.id = `product-${p.nama_produk.replace(/\s+/g, '-')}`;
+                    item.innerHTML = `
+                        <img src="${p.path_gambar}" alt="${p.nama_produk}">
+                        <div class="product-details">
+                            <span class="name">${p.nama_produk}</span>
+                            <span class="price">Rp ${p.harga_per_kg.toLocaleString('id-ID')}/kg</span>
+                        </div>
+                    `;
+                    productListEl.appendChild(item);
+                });
+            }
+
+            // 2. Update status (berat & deteksi) secara berkala
+            async function updateStatus() {
+                try {
+                    const response = await fetch('/api/status');
+                    const data = await response.json();
+
+                    // Update berat
+                    currentWeight = data.weight;
+                    if (currentWeight < 0) {
+                        weightEl.textContent = "ERROR";
+                        weightEl.classList.add("error");
+                    } else {
+                        weightEl.textContent = currentWeight.toFixed(3);
+                        weightEl.classList.remove("error");
+                    }
+                    
+                    // Update deteksi
+                    detectionEl.textContent = data.detection;
+
+                    // Cari produk yang cocok dengan hasil deteksi
+                    currentProduct = products.find(p => p.nama_produk.toLowerCase() === data.detection.toLowerCase());
+                    
+                    updateUI();
+
+                } catch (error) {
+                    console.error('Gagal update status:', error);
+                }
+            }
+
+            // 3. Update semua elemen UI
+            function updateUI() {
+                // Hapus highlight dari semua produk
+                document.querySelectorAll('.product-item').forEach(el => el.classList.remove('active'));
+
+                if (currentProduct) {
+                    priceEl.textContent = currentProduct.harga_per_kg.toLocaleString('id-ID');
+                    const totalPrice = currentWeight * currentProduct.harga_per_kg;
+                    totalPriceEl.textContent = Math.round(totalPrice).toLocaleString('id-ID');
+                    cetakBtn.disabled = false;
+                    
+                    // Beri highlight pada produk yang terdeteksi
+                    const activeProductEl = document.getElementById(`product-${currentProduct.nama_produk.replace(/\s+/g, '-')}`);
+                    if (activeProductEl) {
+                        activeProductEl.classList.add('active');
+                    }
+                } else {
+                    priceEl.textContent = "-";
+                    totalPriceEl.textContent = "-";
+                    cetakBtn.disabled = true;
+                }
+            }
+
+            // 4. Fungsi untuk tombol cetak
+            async function simpanTransaksi() {
+                if (!currentProduct || currentWeight <= 0) return;
+
+                const payload = {
+                    nama_produk: currentProduct.nama_produk,
+                    berat_kg: currentWeight,
+                    harga_per_kg: currentProduct.harga_per_kg,
+                    total_harga: Math.round(currentWeight * currentProduct.harga_per_kg)
+                };
+
+                try {
+                    const response = await fetch('/cetak', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    showNotification(result.status, result.status.includes('✅'));
+                } catch (error) {
+                    showNotification('❌ Gagal terhubung ke server.', false);
+                }
+            }
+            
+            cetakBtn.addEventListener('click', simpanTransaksi);
+
+            // Fungsi utilitas
+            function showNotification(message, isSuccess) {
+                notifEl.textContent = message;
+                notifEl.className = isSuccess ? 'notification success' : 'notification error';
+                setTimeout(() => { notifEl.className = 'notification hidden'; }, 4000);
+            }
+            
+            function updateClock() {
+                document.getElementById('clock').textContent = new Date().toLocaleString('id-ID');
+            }
+
+            // Inisialisasi
+            loadProducts();
+            setInterval(updateStatus, 1000); // Update status setiap detik
+            setInterval(updateClock, 1000);
+        });
+    </script>
+</body>
+</html>
