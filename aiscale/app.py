@@ -250,12 +250,15 @@ def auth_me(current_email):
 # -----------------------------
 # Existing public endpoints (kept)
 # -----------------------------
+# @app.route("/")
+# def index():
+    # try:
+        # return render_template("index.html")
+    # except Exception:
+        # return "<h3>API Server running. No index.html found.</h3>"
 @app.route("/")
 def index():
-    try:
-        return render_template("index.html")
-    except Exception:
-        return "<h3>API Server running. No index.html found.</h3>"
+    return jsonify({"status": "API running"})
 
 @app.route("/api/status", methods=["POST"])
 def api_status():
